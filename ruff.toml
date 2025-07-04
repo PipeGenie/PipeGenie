@@ -1,0 +1,21 @@
+line-length = 99
+
+output-format = "grouped"
+
+# Always generate Python 3.10-compatible code.
+target-version = "py310"
+
+[lint]
+select = ["F", "E", "W", "C90", "I", "N", "D", "ANN", "S", "BLE", "FBT", "B", "COM", "C4", "ICN", "T20", "PYI", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "PL", "NPY", "PERF", "FURB"]
+ignore = ["E999", "ANN101", "ANN102", "D200", "S311"]
+
+# Allow X and X_* names, which are the convention in machine learning code.
+[lint.pep8-naming]
+extend-ignore-names = ["X", "X_*"]
+
+# Use the numpy docstring style.
+[lint.pydocstyle]
+convention = "numpy"
+
+[lint.flake8-annotations]
+mypy-init-return = true

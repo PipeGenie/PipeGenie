@@ -1,0 +1,25 @@
+grammar: sample-grammar-classification.xml
+grammar_type: evoflow-xml
+pop_size: 50
+generations: 5
+fitness: balanced_accuracy_score
+nderiv: 13
+selection: TournamentSelection(tournament_size=3)
+crossover: MultiCrossover(p_crossover=0.8)
+mutation: MultiMutation(p_mutation=0.5, p_hyper=0.5)
+mutation_elite: HyperparameterMutation(p_mutation=0.2)
+replacement: ElitistGenerationalReplacement(elitism=5)
+use_double_mutation: False
+elite_size: 5
+timeout: 3600
+eval_timeout: 360
+cross_validator: StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+maximization: True
+early_stopping_threshold: 0.0001
+early_stopping_generations: None
+early_stopping_time: None
+outdir: sample-results
+n_jobs: 5
+seed: 42
+use_predict_proba: False
+diversity_weight: 0.2

@@ -1,0 +1,109 @@
+<grammar>
+    <!--  Root -->
+    <root-symbol>workflow</root-symbol>
+     
+    <!-- Terminals -->
+    <terminals>
+
+        <!-- PREPROCESSING -->
+
+        <!-- scaler -->
+
+        <terminal name="minMaxScaler" type="scaler" code="sklearn.preprocessing.MinMaxScaler"/>
+
+        <!-- featureSelection -->
+
+        <terminal name="selectPercentile" type="featureSelection" code="sklearn.feature_selection.SelectPercentile">
+            <hparam name="sp::percentile" type="float" lower="1" upper="99" default="50"/>
+        </terminal>
+
+        <!-- featureExtraction -->
+
+        <terminal name="pca" type="featureExtraction" code="sklearn.decomposition.PCA">
+            <hparam name="pca::n_components" type="float" lower="0.5" upper="0.9999" default="0.9999"/>
+            <hparam name="pca::whiten" type="bool" default="False"/>
+        </terminal>
+
+        <!-- CLASSIFIERS --> 
+
+        <!-- tree -->
+
+        <terminal name="decisionTree" type="tree" code="sklearn.tree.DecisionTreeClassifier">
+            <hparam name="dt::criterion" type="categorical" values="gini;entropy" default="gini"/>
+            <hparam name="dt::max_depth" type="int" lower="1" upper="30" default="10"/>
+            <hparam name="dt::min_samples_split" type="int" lower="2" upper="20" default="2"/>
+            <hparam name="dt::max_features" type="float" lower="0" upper="1" default="0.5"/>
+            <hparam name="dt::min_samples_leaf" type="int" lower="1" upper="20" default="1"/>
+            <hparam name="dt::class_weight" type="categorical" values="balanced" default="None"/>
+        </terminal>
+
+        <!-- ensemble -->
+
+        <terminal name="randomForest" type="tree" code="sklearn.ensemble.RandomForestClassifier">
+            <hparam name="rf::n_estimators" type="int" lower="10" upper="100" default="100"/>
+            <hparam name="rf::criterion" type="categorical" values="gini;entropy" default="gini"/>
+            <hparam name="rf::max_features" type="union">
+                <union type="categorical" values="sqrt;log2" default="None"/>
+                <union type="float" lower="0.5" upper="1" default="0.5"/>
+            </hparam>
+            <hparam name="rf::min_samples_split" type="int" lower="2" upper="20" default="2"/>
+            <hparam name="rf::min_samples_leaf" type="int" lower="1" upper="20" default="1"/>
+            <hparam name="rf::bootstrap" type="bool" default="True"/>
+            <hparam name="rf::class_weight" type="categorical" values="balanced;balanced_subsample" default="None"/>
+        </terminal>
+
+        <!-- linear -->
+
+        <terminal name="logisticRegression" type="linear" code="sklearn.linear_model.LogisticRegression">
+            <hparam name="lr::penalty" type="categorical" values="l1;l2;None" default="l2"/>
+            <hparam name="lr::solver" type="categorical" values="lbfgs;liblinear;newton-cg;sag;saga" default="lbfgs"/>
+            <hparam name="lr::max_iter" type="fix_int" value="1000"/>
+            <hparam name="lr::C" type="float" lower="1e-4" upper="25" default="1" log="True"/>
+            <hparam name="lr::class_weight" type="categorical" values="balanced" default="None"/>
+        </terminal>
+
+    </terminals>
+     
+    <!-- Non terminals: are represented as production rules -->
+    <non-terminals>
+ 
+        <!-- Structure definition -->
+        <non-terminal name="workflow">
+            <production-rule>classificationBranch</production-rule>
+        </non-terminal>
+         
+        <non-terminal name="classificationBranch">
+            <production-rule>classifier</production-rule>
+            <production-rule>preprocessingBranch;classifier</production-rule>
+        </non-terminal>
+
+        <non-terminal name="preprocessingBranch">
+            <production-rule>preprocess</production-rule>
+            <production-rule>preprocessingBranch;preprocess</production-rule>
+        </non-terminal>
+ 
+        <!-- CLASSIFIERS -->
+        <non-terminal name="classifier">
+            <!-- ensembles -->
+            <production-rule>randomForest;randomForest_hp</production-rule>
+            <!-- linear -->
+            <production-rule>logisticRegression;logisticRegression_hp</production-rule>
+        </non-terminal>
+
+        <!-- ESTIMATOR HYPER-PARAMETER -->
+        <non-terminal name="estimators">
+            <production-rule>decisionTree;decisionTree_hp</production-rule>
+        </non-terminal>
+
+        <!-- PREPROCESSING -->
+        <non-terminal name="preprocess">
+            <!-- feature selection-->
+            <production-rule>selectPercentile;selectPercentile_hp</production-rule>
+            <!-- scaler -->
+            <production-rule>minMaxScaler</production-rule>
+            <!-- feature extraction -->
+            <production-rule>pca;pca_hp</production-rule>
+        </non-terminal>
+
+    </non-terminals>
+</grammar>

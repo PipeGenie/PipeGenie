@@ -1,0 +1,53 @@
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipegenie"
+version = "0.7.0"
+description = "A Python package for generation and optimization of machine learning pipelines using an evolutionary algorithm"
+readme = "README.md"
+license = { text = "MIT License" }
+authors = [
+    { name = "University of Córdoba", email = "info@pipegenie.org" }
+]
+dependencies = [
+    "numpy>=1.26,<2",
+    "loky>=3.4"
+]
+requires-python = ">=3.10,<3.13" # for Windows 3.12
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System,yhplok :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed"
+]
+
+keywords = ["machine learning", "pipeline", "generation", "optimization", "evolutionary algorithm"]
+
+[tool.setuptools.packages.find]
+include = ["pipegenie", "pipegenie.*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"pipegenie.classification" = ["assets/*.xml"]
+"pipegenie.regression" = ["assets/*.xml"]
+
+[project.urls]
+Homepage = "www.pipegenie.org"
+Source = "https://github.com/PipeGenie/PipeGenie"

@@ -1,0 +1,74 @@
+0: Pipeline(
+	0: FastICA(algorithm='deflation', fun='exp', n_components=84, random_state=42)
+	1: AdaBoostClassifier(algorithm='SAMME',
+                   estimator=DecisionTreeClassifier(class_weight='balanced',
+                                                    criterion='entropy',
+                                                    max_depth=24,
+                                                    max_features=0.10264332148015243,
+                                                    min_samples_leaf=14,
+                                                    random_state=42),
+                   learning_rate=0.9997595874046005, n_estimators=29,
+                   random_state=42)
+) -> Fitness: 0.9714285714285715
+
+1: Pipeline(
+	0: FastICA(algorithm='deflation', fun='exp', n_components=84, random_state=42)
+	1: AdaBoostClassifier(algorithm='SAMME',
+                   estimator=DecisionTreeClassifier(class_weight='balanced',
+                                                    max_depth=17,
+                                                    max_features=0.09090941217379389,
+                                                    min_samples_leaf=2,
+                                                    min_samples_split=17,
+                                                    random_state=42),
+                   learning_rate=0.9997595874046005, n_estimators=29,
+                   random_state=42)
+) -> Fitness: 0.9714285714285715
+
+2: Pipeline(
+	0: FastICA(algorithm='deflation', fun='exp', n_components=84, random_state=42)
+	1: AdaBoostClassifier(algorithm='SAMME',
+                   estimator=DecisionTreeClassifier(class_weight='balanced',
+                                                    criterion='entropy',
+                                                    max_depth=22,
+                                                    max_features=0.29740064768156615,
+                                                    min_samples_leaf=4,
+                                                    min_samples_split=11,
+                                                    random_state=42),
+                   learning_rate=0.9997595874046005, n_estimators=29,
+                   random_state=42)
+) -> Fitness: 0.961904761904762
+
+3: Pipeline(
+	0: Nystroem(coef0=0.9325292278682136, degree=5, gamma=0.20700104585316448,
+         kernel='cosine', n_components=80, random_state=42)
+	1: AdaBoostClassifier(algorithm='SAMME',
+                   estimator=DecisionTreeClassifier(criterion='entropy',
+                                                    max_depth=4,
+                                                    max_features=0.5309219311457678,
+                                                    min_samples_leaf=14,
+                                                    min_samples_split=19,
+                                                    random_state=42),
+                   learning_rate=0.5987735800266115, n_estimators=27,
+                   random_state=42)
+) -> Fitness: 0.9619047619047618
+
+4: Pipeline(
+	0: Nystroem(coef0=0.11035242316372162, degree=5, gamma=0.20700104585316448,
+         kernel='cosine', n_components=88, random_state=42)
+	1: AdaBoostClassifier(algorithm='SAMME',
+                   estimator=DecisionTreeClassifier(criterion='entropy',
+                                                    max_depth=22,
+                                                    max_features=0.5309219311457678,
+                                                    min_samples_leaf=14,
+                                                    min_samples_split=6,
+                                                    random_state=42),
+                   learning_rate=1.1708564525311265, n_estimators=55,
+                   random_state=42)
+) -> Fitness: 0.9619047619047618
+
+Ensemble fitness: 0.980952380952381
+Weights: [1.0, 1.0, 0.9901960784313726, 0.9901960784313724, 0.9901960784313724]
+Prediction: [1 0 2 1 1 0 1 2 1 1 2 0 0 0 0 1 2 1 1 2 0 2 0 2 2 2 2 2 0 0 0 0 1 0 0 2 1
+ 0 0 0 2 1 1 0 0 1 2 2 1 2 1 2 1 0 2 1 0 0 0 1 2 0 0 0 1 0 1 2 0 1 2 0 2 2
+ 1 1 2 1 0 1 2 0 0 1 1 0 2 0 0 1 1 2 1 2 2 1 0 0 2 2 0 0 0 1 2 0 2 2 0 1 1
+ 2]

@@ -1,0 +1,216 @@
+<grammar>
+    <!--  Root -->
+    <root-symbol>workflow</root-symbol>
+     
+    <!-- Terminals -->
+    <terminals>
+
+        <!-- PREPROCESSING -->
+
+        <!-- scaler -->
+
+        <terminal name="minMaxScaler" type="scaler" code="sklearn.preprocessing.MinMaxScaler"/>
+
+        <terminal name="maxAbsScaler" type="scaler" code="sklearn.preprocessing.MaxAbsScaler"/>
+
+        <terminal name="robustScaler" type="scaler" code="sklearn.preprocessing.RobustScaler"/>
+            <terminal name="rs::with_centering" type="bool" default="True"/>
+            <terminal name="rs::with_scaling" type="bool" default="True"/>
+
+        <!-- featureAumentation -->
+
+        <terminal name="nystroem" type="featureAumentation" code="sklearn.kernel_approximation.Nystroem"/>
+            <terminal name="nyss::kernel" type="categorical" values="rbf;cosine;sigmoid;poly" default="rbf"/>
+            <terminal name="nyss::gamma" type="float" lower="3.0517578125e-05" upper="8" default="0.1" log="True"/>
+            <terminal name="nyss::n_components" type="int" lower="10" upper="100" default="100"/>
+            <terminal name="nyss::degree" type="int" lower="2" upper="5" default="2"/>
+            <terminal name="nyss::coef0" type="float" lower="-1" upper="1" default="0"/>
+
+        <!-- featureSelection -->
+
+        <terminal name="varianceThreshold" type="featureSelection" code="sklearn.feature_selection.VarianceThreshold"/>
+
+        <terminal name="selectPercentile" type="featureSelection" code="sklearn.feature_selection.SelectPercentile"/>
+            <terminal name="sp::percentile" type="float" lower="1" upper="99" default="50"/>
+
+        <terminal name="selectFwe" type="featureSelection" code="sklearn.feature_selection.SelectFwe"/>
+            <terminal name="fwe::alpha" type="float" lower="1e-3" upper="0.05" default="0.01" log="True"/>
+
+        <!-- featureExtraction -->
+
+        <terminal name="pca" type="featureExtraction" code="sklearn.decomposition.PCA"/>
+            <terminal name="pca::n_components" type="float" lower="0.5" upper="0.9999" default="0.9999"/>
+            <terminal name="pca::whiten" type="bool" default="False"/>
+       
+        <terminal name="fastICA" type="featureExtraction" code="sklearn.decomposition.FastICA"/>
+            <terminal name="ica::n_components" type="int" lower="2" upper="100" default="3"/>
+            <terminal name="ica::algorithm" type="categorical" values="parallel;deflation" default="parallel"/>
+            <terminal name="ica::whiten" type="categorical" values="unit-variance;arbitrary-variance" default="unit-variance"/>
+            <terminal name="ica::fun" type="categorical" values="logcosh;exp;cube" default="logcosh"/>
+
+        <!-- REGRESSORS --> 
+
+        <!-- tree -->
+
+        <terminal name="decisionTree" type="tree" code="sklearn.tree.DecisionTreeRegressor"/>
+            <terminal name="dt::criterion" type="categorical" values="squared_error;friedman_mse;absolute_error;poisson" default="squared_error"/>
+            <terminal name="dt::max_depth" type="int" lower="0" upper="30" default="10"/>
+            <terminal name="dt::min_samples_split" type="int" lower="2" upper="20" default="2"/>
+            <terminal name="dt::max_features" type="float" lower="0" upper="1" default="0.5"/>
+            <terminal name="dt::min_samples_leaf" type="int" lower="1" upper="20" default="1"/>
+
+        <!-- ensemble -->
+
+        <terminal name="randomForest" type="tree" code="sklearn.ensemble.RandomForestRegressor"/>
+            <terminal name="rf::n_estimators" type="int" lower="10" upper="100" default="100"/>
+            <terminal name="rf::criterion" type="categorical" values="squared_error;friedman_mse;absolute_error;poisson" default="squared_error"/>
+            <terminal name="rf::max_features" type="union">
+                <union type="categorical" values="sqrt;log2" default="None"/>
+                <union type="float" lower="0.5" upper="1" default="0.5"/>
+            </terminal>
+            <terminal name="rf::min_samples_split" type="int" lower="2" upper="20" default="2"/>
+            <terminal name="rf::min_samples_leaf" type="int" lower="1" upper="20" default="1"/>
+            <terminal name="rf::bootstrap" type="bool" default="True"/>
+
+        <terminal name="extraTreesRegressor" type="tree" code="sklearn.ensemble.ExtraTreesRegressor"/>
+            <terminal name="etc::n_estimators" type="int" lower="10" upper="100" default="100"/>
+            <terminal name="etc::criterion" type="categorical" values="squared_error;friedman_mse;absolute_error;poisson" default="squared_error"/>
+            <terminal name="etc::max_features" type="categorical" values="sqrt;log2" default="sqrt"/>
+            <terminal name="etc::min_samples_split" type="int" lower="2" upper="20" default="2"/>
+            <terminal name="etc::min_samples_leaf" type="int" lower="1" upper="20" default="1"/>
+            <terminal name="etc::bootstrap" type="bool" default="False"/>
+        
+        <terminal name="adaBoost" type="ensemble" code="sklearn.ensemble.AdaBoostRegressor"/>
+            <terminal name="ada::estimator" type="estimator" estimators="estimators"/>
+            <terminal name="ada::n_estimators" type="int" lower="10" upper="100" default="50"/>
+            <terminal name="ada::learning_rate" type="float" lower="0.01" upper="2" default="0.1" log="True"/>
+            <terminal name="ada::algorithm" type="categorical" values="SAMME.R;SAMME" default="SAMME.R"/>
+
+        <!-- neighbors -->
+
+        <terminal name="kNN" type="neighbors" code="sklearn.neighbors.KNeighborsRegressor"/>
+            <terminal name="knn::n_neighbors" type="int" lower="1" upper="50" default="1" log="True"/>
+            <terminal name="knn::weights" type="categorical" values="uniform;distance" default="uniform"/>
+            <terminal name="knn::p" type="int" lower="1" upper="2" default="2"/>
+
+        <!-- linear -->
+
+        <terminal name="linearRegression" type="linear" code="sklearn.linear_model.LinearRegression"/>
+
+        <!-- neural -->
+
+        <terminal name="mlpRegressor" type="neural" code="sklearn.neural_network.MLPRegressor"/>
+            <terminal name="mlp::hidden_layer_sizes" type="tuple">
+                <tuple type="int" lower="10" upper="100" default="100"/>
+                <tuple type="int" lower="1" upper="20" default="10"/>
+            </terminal>
+            <terminal name="mlp::alpha" type="float" lower="1e-4" upper="1e-1" default="1e-2" log="True"/>
+            <terminal name="mlp::learning_rate_init" type="float" lower="1e-3" upper="1.0" default="1e-2" log="True"/>
+            <terminal name="mlp::solver" type="categorical" values="lbfgs;sgd;adam" default="adam"/>
+            <terminal name="mlp::activation" type="categorical" values="identity;logistic;tanh;relu" default="relu"/>
+
+    </terminals>
+     
+    <!-- Non terminals: are represented as production rules -->
+    <non-terminals>
+ 
+        <!-- Structure definition -->
+        <non-terminal name="workflow">
+            <production-rule>regressor</production-rule>
+            <production-rule>preprocessingBranch;regressor</production-rule>
+        </non-terminal>
+
+        <non-terminal name="preprocessingBranch">
+            <production-rule>preprocess</production-rule>
+            <production-rule>preprocessingBranch;preprocess</production-rule>
+        </non-terminal>
+ 
+        <!-- REGRESSORS -->
+        <non-terminal name="regressor">
+            <!-- ensembles -->
+            <production-rule>randomForest(randomForest_hp)</production-rule>
+            <production-rule>extraTreesRegressor(extraTreesRegressor_hp)</production-rule>
+            <production-rule>adaBoost(adaBoost_hp)</production-rule>
+            <!-- linear -->
+            <production-rule>linearRegression</production-rule>
+            <!-- neighbors -->
+            <production-rule>kNN(kNN_hp)</production-rule>
+            <!-- tree -->
+            <production-rule>decisionTree(decisionTree_hp)</production-rule>
+            <!-- neural -->
+            <production-rule>mlpRegressor(mlpRegressor_hp)</production-rule>
+        </non-terminal>
+
+        <!-- ESTIMATOR HYPER-PARAMETER -->
+        <non-terminal name="estimators">
+            <production-rule>decisionTree(decisionTree_hp)</production-rule>
+        </non-terminal>
+
+        <!-- PREPROCESSING -->
+        <non-terminal name="preprocess">
+            <!-- feature selection-->
+            <production-rule>selectPercentile(selectPercentile_hp)</production-rule>
+            <production-rule>selectFwe(selectFwe_hp)</production-rule>
+            <production-rule>varianceThreshold</production-rule>
+            <!-- scaler -->
+            <production-rule>minMaxScaler</production-rule>
+            <production-rule>maxAbsScaler</production-rule>
+            <production-rule>robustScaler(robustScaler_hp)</production-rule>
+            <!-- feature extraction -->
+            <production-rule>pca(pca_hp)</production-rule>
+            <production-rule>fastICA(fastICA_hp)</production-rule>
+            <!-- feature aumentation -->
+            <production-rule>nystroem(nystroem_hp)</production-rule>
+        </non-terminal>
+
+        <!-- HYPERPARAMETERS -->
+        <non-terminal name="decisionTree_hp">
+            <production-rule>dt::criterion;dt::max_depth;dt::min_samples_split;dt::max_features;dt::min_samples_leaf</production-rule>
+        </non-terminal>
+
+        <non-terminal name="randomForest_hp">
+            <production-rule>rf::n_estimators;rf::criterion;rf::max_features;rf::min_samples_split;rf::min_samples_leaf;rf::bootstrap</production-rule>
+        </non-terminal>
+
+        <non-terminal name="extraTreesRegressor_hp">
+            <production-rule>etc::n_estimators;etc::criterion;etc::max_features;etc::min_samples_split;etc::min_samples_leaf;etc::bootstrap</production-rule>
+        </non-terminal>
+
+        <non-terminal name="adaBoost_hp">
+            <production-rule>ada::estimator;ada::n_estimators;ada::learning_rate;ada::algorithm</production-rule>
+        </non-terminal>
+
+        <non-terminal name="kNN_hp">
+            <production-rule>knn::n_neighbors;knn::weights;knn::p</production-rule>
+        </non-terminal>
+
+        <non-terminal name="mlpRegressor_hp">
+            <production-rule>mlp::hidden_layer_sizes;mlp::alpha;mlp::learning_rate_init;mlp::solver;mlp::activation</production-rule>
+        </non-terminal>
+
+        <non-terminal name="robustScaler_hp">
+            <production-rule>rs::with_centering;rs::with_scaling</production-rule>
+        </non-terminal>
+
+        <non-terminal name="nystroem_hp">
+            <production-rule>nyss::kernel;nyss::gamma;nyss::n_components;nyss::degree;nyss::coef0</production-rule>
+        </non-terminal>
+
+        <non-terminal name="pca_hp">
+            <production-rule>pca::n_components;pca::whiten</production-rule>
+        </non-terminal>
+
+        <non-terminal name="fastICA_hp">
+            <production-rule>ica::n_components;ica::algorithm;ica::whiten;ica::fun</production-rule>
+        </non-terminal>
+
+        <non-terminal name="selectPercentile_hp">
+            <production-rule>sp::percentile</production-rule>
+        </non-terminal>
+
+        <non-terminal name="selectFwe_hp">
+            <production-rule>fwe::alpha</production-rule>
+        </non-terminal>
+
+    </non-terminals>
+</grammar>
