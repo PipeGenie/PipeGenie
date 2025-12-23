@@ -1,11 +1,11 @@
+# SPDX-License-Identifier: MIT-HUMAINS-Attribution
 #
-# Copyright (c) 2024 University of Córdoba, Spain.
+# Copyright (c) 2024 HUMAINS Research Group (University of Córdoba, Spain).
 # Copyright (c) 2024 The authors.
 # All rights reserved.
 #
-# MIT License with Attribution Clause
-# For full license text, see the LICENSE file in the repo root.
-#
+# MIT License – HUMAINS Research Group Attribution Variant
+# For full license text, see the LICENSE file in the repository root.
 
 """
 Base class for all pipegenie estimators.
@@ -24,6 +24,7 @@ from multiprocessing import Manager, cpu_count
 from pathlib import Path
 from time import time
 from typing import TYPE_CHECKING
+from datetime import datetime
 
 import numpy as np
 from loky import ProcessPoolExecutor
@@ -34,6 +35,7 @@ from pipegenie.grammar import parse_pipe_grammar
 from pipegenie.logging._logging import Logbook
 from pipegenie.logging._stats import MultiStatistics, Statistics
 from pipegenie.syntax_tree._encoding import SyntaxTreeSchema
+from pipegenie.exceptions import warn, NoValidPipelineWarning
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -239,6 +241,8 @@ class BasePipegenie(ABC):
         self._create_loggers()
         self._init_statistics()
 
+        self.general_logger.info("PipeGenie initiated")
+
         root, terms, non_terms, self.pset, _ = parse_pipe_grammar(
             grammar,
             grammar_type,
@@ -264,6 +268,18 @@ class BasePipegenie(ABC):
         self.evolution_logger.addHandler(handler)
         console = logging.StreamHandler(sys.stdout)
         self.evolution_logger.addHandler(console)
+
+        # create a general logger
+        self.general_logger = logging.getLogger("pipegenie_general")
+        self.general_logger.setLevel(logging.INFO)
+        now = datetime.now()
+        handler = logging.FileHandler(self.outdir_path.joinpath(f"log_{now.strftime('%Y%m%d%H%M%S%f')}.txt"), mode="w")
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        handler.setFormatter(formatter)
+        self.general_logger.addHandler(handler)
 
     def _create_worker_logger(self, queue: 'Queue[object]') -> logging.Logger:
         """
@@ -299,6 +315,10 @@ class BasePipegenie(ABC):
         for handler in self.individuals_logger.handlers[:]:
             handler.close()
             self.individuals_logger.removeHandler(handler)
+
+        for handler in self.general_logger.handlers[:]:
+            handler.close()
+            self.general_logger.removeHandler(handler)
 
     def _init_statistics(self) -> None:
         """
@@ -345,6 +365,7 @@ class BasePipegenie(ABC):
         self.evolution_logger.info("--- " + exec_time + " sec ---")
 
         if self.elite is None or len(self.elite) == 0:
+            self.general_logger.info("The elite is empty when it should have, at least, one member")
             raise RuntimeError("The elite is empty when it should have, at least, one member")
 
         for ind in self.elite:
@@ -352,7 +373,6 @@ class BasePipegenie(ABC):
                 ind.create_pipeline(self.pset)
 
         self._generate_ensemble(data)
-        self._close_loggers()
 
     @abstractmethod
     def _evaluate(
@@ -422,6 +442,8 @@ class BasePipegenie(ABC):
         listener = logging.handlers.QueueListener(q, *self.individuals_logger.handlers)
         listener.start()
 
+        self.general_logger.info("Starting the evolution proccess")
+
         evaluate = partial(self._evaluate, data=data, start=start, queue=q)
 
         with ProcessPoolExecutor(max_workers=self.cpu_count) as pool:
@@ -434,6 +456,11 @@ class BasePipegenie(ABC):
 
         if len(valid_population) > 0:
             self.elite.update(valid_population)
+        else:
+            self.general_logger.warning("No valid pipeline found. This could led to a faulty evolution process")
+            warn("No valid pipeline found. This could led to a faulty evolution process", NoValidPipelineWarning)
+
+        self.general_logger.info(f"Generation 0 completed. {len(valid_population) / self.pop_size * 100}% of individuals evaluated")
 
         record = self.stats.compile(population)
         record_elite = self.stats_elite.compile(self.elite)
@@ -459,8 +486,16 @@ class BasePipegenie(ABC):
                 ind.fitness.values, ind.prediction, ind.runtime = result
 
             population = self.replacement.replace(population, offspring, self.elite.elite)
-            self.elite.update(population)
 
+            valid_population = [ind for ind in population if ind.fitness.valid]
+
+            if len(valid_population) > 0:
+                self.elite.update(valid_population)
+            else:
+                self.elite.update(population)
+
+            self.general_logger.info(f"Generation {gen} completed. {len(valid_population) / self.pop_size * 100}% of individuals evaluated")
+            
             record = self.stats.compile(population)
             record_elite = self.stats_elite.compile(self.elite)
             logbook.record(gen=gen, nevals=len(evals), **record, **record_elite)
@@ -471,6 +506,11 @@ class BasePipegenie(ABC):
             if self._should_early_stop():
                 return
 
+        if self.elite is None or len(self.elite) == 0:
+            self.general_logger.info("The evolution process has finished with no valid pipelines")
+        else:
+            self.general_logger.info("The evolution process has finished.")
+            
         listener.stop()
 
     @abstractmethod
@@ -619,3 +659,6 @@ class BasePipegenie(ABC):
 
         with self.outdir_path.joinpath(filename).open("wb") as file:
             pickle.dump(self.ensemble, file)
+
+    def __del__(self):    
+        self._close_loggers()

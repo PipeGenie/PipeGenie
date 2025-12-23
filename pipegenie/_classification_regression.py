@@ -1,11 +1,11 @@
+# SPDX-License-Identifier: MIT-HUMAINS-Attribution
 #
-# Copyright (c) 2024 University of Córdoba, Spain.
+# Copyright (c) 2024 HUMAINS Research Group (University of Córdoba, Spain).
 # Copyright (c) 2024 The authors.
 # All rights reserved.
 #
-# MIT License with Attribution Clause
-# For full license text, see the LICENSE file in the repo root.
-#
+# MIT License – HUMAINS Research Group Attribution Variant
+# For full license text, see the LICENSE file in the repository root.
 
 """
 Base class for pipegenie classification and regression models.
@@ -13,6 +13,7 @@ Base class for pipegenie classification and regression models.
 
 import os
 import signal
+import logging
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from multiprocessing import Pipe
@@ -23,6 +24,7 @@ import numpy as np
 from loky import TimeoutError, get_reusable_executor
 
 from pipegenie.base import BasePipegenie
+from pipegenie.exceptions import NoFittedModelError
 
 if TYPE_CHECKING:
     from multiprocessing.connection import Connection
@@ -275,10 +277,9 @@ class BaseClassificationRegression(BasePipegenie, ABC):
                 result = None
 
                 try:
-                    worker_pid = parent_conn.recv()
                     result = future.result(timeout=fold_timeout)
                 except TimeoutError:
-                    os.kill(worker_pid, signal.SIGINT)
+                    executor.shutdown(wait=False)
                     result = "eval_timeout_error"
                 finally:
                     parent_conn.close()
@@ -325,39 +326,47 @@ class BaseClassificationRegression(BasePipegenie, ABC):
         weights = [float(ind.fitness.values[0] / best_fitness) if self.maximization
                    else float(best_fitness / ind.fitness.values[0])
                    for ind in self.elite]
-
-        estimators = [(str(idx), est.pipeline) for idx, est in enumerate(self.elite)]
-        self.ensemble = self._create_ensemble_object(estimators, weights)
-        # Reset ramdon state
-        self.cross_validator.set_random_state(self.seed)
-        fitness_values = []
         
-        # Evaluate the ensemble with the cross-validator
-        for train_idx, test_idx in self.cross_validator.split(X, y):
-            X_train, X_test = X[train_idx], X[test_idx]
-            y_train, y_test = y[train_idx], y[test_idx]
+        valid_elite = [ind for ind in self.elite if ind.fitness.valid]
+        if len(valid_elite) > 0:
+            estimators = [(str(idx), est.pipeline) for idx, est in enumerate(valid_elite)]
+            self.ensemble = self._create_ensemble_object(estimators, weights)
+            # Reset ramdon state
+            self.cross_validator.set_random_state(self.seed)
+            fitness_values = []
+            
+            # Evaluate the ensemble with the cross-validator
+            for train_idx, test_idx in self.cross_validator.split(X, y):
+                X_train, X_test = X[train_idx], X[test_idx]
+                y_train, y_test = y[train_idx], y[test_idx]
 
-            self.ensemble.fit(X_train, y_train)
-            y_pred = self.ensemble.predict(X_test)
+                self.ensemble.fit(X_train, y_train)
+                y_pred = self.ensemble.predict(X_test)
 
-            fitness = self.fitness(y_test, y_pred)
-            fitness_values.append(fitness)
+                fitness = self.fitness(y_test, y_pred)
+                fitness_values.append(fitness)
 
-        # Retrain the ensemble with the whole dataset
-        self.ensemble.fit(X, y)
+            # Retrain the ensemble with the whole dataset
+            self.ensemble.fit(X, y)
 
-        with self.outdir_path.joinpath("best_pipeline.txt").open("w", encoding="utf-8") as log:
-            log.write(str(best_ind) + "\n")
-            log.write(f"Fitness: {best_fitness}\n")
-            log.write(f"Prediction: {best_ind.pipeline.predict(X)}\n")
+            with self.outdir_path.joinpath("best_pipeline.txt").open("w", encoding="utf-8") as log:
+                log.write(str(best_ind) + "\n")
+                log.write(f"Fitness: {best_fitness}\n")
+                log.write(f"Prediction: {best_ind.pipeline.predict(X)}\n")
 
-        with self.outdir_path.joinpath("ensemble.txt").open("w", encoding="utf-8") as log:
-            for idx, (name, est) in enumerate(estimators):
-                log.write(f"{name}: {est} -> Fitness: {self.elite[idx].fitness.values[0]}\n\n")
+            with self.outdir_path.joinpath("ensemble.txt").open("w", encoding="utf-8") as log:
+                for idx, (name, est) in enumerate(estimators):
+                    log.write(f"{name}: {est} -> Fitness: {self.elite[idx].fitness.values[0]}\n\n")
 
-            log.write(f"Ensemble fitness: {np.mean(fitness_values)}\n")
-            log.write(f"Weights: {weights}\n")
-            log.write(f"Prediction: {self.ensemble.predict(X)}\n")
+                log.write(f"Ensemble fitness: {np.mean(fitness_values)}\n")
+                log.write(f"Weights: {weights}\n")
+                log.write(f"Prediction: {self.ensemble.predict(X)}\n")
+
+        else:
+            with self.outdir_path.joinpath("best_pipeline.txt").open("w", encoding="utf-8") as log:
+                log.write("")
+            with self.outdir_path.joinpath("ensemble.txt").open("w", encoding="utf-8") as log:
+                log.write("")
 
     def predict(self, X: 'ArrayLike') -> 'NDArray':
         """
@@ -373,7 +382,14 @@ class BaseClassificationRegression(BasePipegenie, ABC):
         y : array-like of shape (n_samples,)
             The predicted target values.
         """
-        return self.ensemble.predict(X)
+
+        valid_elite = [ind for ind in self.elite if ind.fitness.valid]
+        if len(valid_elite) > 0:
+            return self.ensemble.predict(X)
+        else:
+            general_logger = logging.getLogger("pipegenie_general")
+            general_logger.error("The model has not been fitted. Either you have not invoked the method fit or the training did not produce valid pipelines. Please, revise the execution log for more information.")
+            raise NoFittedModelError("The model has not been fitted. Either you have not invoked the method fit or the training did not produce valid pipelines. Please, revise the execution log for more information.")
 
     @abstractmethod
     def score(self, X: 'ArrayLike', y: 'ArrayLike') -> float:

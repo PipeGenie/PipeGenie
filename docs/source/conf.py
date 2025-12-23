@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'PipeGenie'
-copyright = '2024, University of Córdoba'
-author = 'University of Córdoba'
+copyright = '2026, HUMAINS Research Group'
+author = 'HUMAINS Research Group'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = '0.8.0'
 
 
 # -- General configuration ---------------------------------------------------

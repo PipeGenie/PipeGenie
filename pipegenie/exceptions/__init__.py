@@ -7,15 +7,20 @@
 # MIT License – HUMAINS Research Group Attribution Variant
 # For full license text, see the LICENSE file in the repository root.
 
-"""
-Model selection module for the Genetic Programming algorithm.
-"""
-
-from ._split import BaseCrossValidator, KFold, StratifiedKFold, train_test_split
+from .errors import (
+    PipegenieError,
+    NoValidPipelines, 
+    NoFittedModelError,
+    PipegenieWarning,
+    NoValidPipelineWarning,
+    warn
+)
 
 __all__ = [
-    'BaseCrossValidator',
-    'KFold',
-    'StratifiedKFold',
-    'train_test_split',
+    "PipegenieError", 
+    "NoValidPipelines", 
+    "NoFittedModelError",
+    "PipegenieWarning",
+    "NoValidPipelineWarning",
+    "warn"
 ]

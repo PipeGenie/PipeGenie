@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pipegenie"
-version = "0.7.0"
+version = "0.8.0"
 description = "A Python package for generation and optimization of machine learning pipelines using an evolutionary algorithm"
 readme = "README.md"
-license = { text = "MIT License" }
+license = { text = "MIT License – HUMAINS Research Group Attribution Variant" }
 authors = [
-    { name = "University of Córdoba", email = "info@pipegenie.org" }
+    { name = "HUMAINS Research Group", email = "info@pipegenie.org" }
 ]
 dependencies = [
     "numpy>=1.26,<2",

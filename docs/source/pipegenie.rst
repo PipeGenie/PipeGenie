@@ -18,6 +18,7 @@ Subpackages
    pipegenie.metrics
    pipegenie.model_selection
    pipegenie.regression
+   pipegenie.exceptions
 
 pipegenie.base module
 ---------------------

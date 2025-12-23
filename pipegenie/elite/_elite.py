@@ -1,11 +1,11 @@
+# SPDX-License-Identifier: MIT-HUMAINS-Attribution
 #
-# Copyright (c) 2024 University of Córdoba, Spain.
+# Copyright (c) 2024 HUMAINS Research Group (University of Córdoba, Spain).
 # Copyright (c) 2024 The authors.
 # All rights reserved.
 #
-# MIT License with Attribution Clause
-# For full license text, see the LICENSE file in the repo root.
-#
+# MIT License – HUMAINS Research Group Attribution Variant
+# For full license text, see the LICENSE file in the repository root.
 
 from bisect import bisect_right
 from typing import TYPE_CHECKING
@@ -138,7 +138,8 @@ class DiverseElite:
 
         for member in self.elite:
             diff = np.sum(ind.prediction != member.prediction)
-            diff /= len(ind.prediction)
+            if diff > 0 and ind.prediction is not None:
+                diff /= len(ind.prediction)
             diversity += diff
 
         return diversity / len(self.elite)

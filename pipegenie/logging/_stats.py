@@ -1,11 +1,11 @@
+# SPDX-License-Identifier: MIT-HUMAINS-Attribution
 #
-# Copyright (c) 2024 University of Córdoba, Spain.
+# Copyright (c) 2024 HUMAINS Research Group (University of Córdoba, Spain).
 # Copyright (c) 2024 The authors.
 # All rights reserved.
 #
-# MIT License with Attribution Clause
-# For full license text, see the LICENSE file in the repo root.
-#
+# MIT License – HUMAINS Research Group Attribution Variant
+# For full license text, see the LICENSE file in the repository root.
 
 # This file contains classes based on DEAP's tools.Statistics and
 # tools.MultiStatistics to compute statistics from data.
@@ -13,8 +13,11 @@
 # - tools.Statistics: https://github.com/DEAP/deap/blob/master/deap/tools/support.py#L150
 # - tools.MultiStatistics: https://github.com/DEAP/deap/blob/master/deap/tools/support.py#L209
 
+import numpy as np
+
 from functools import partial
 from typing import TYPE_CHECKING
+from math import isnan
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -115,8 +118,28 @@ class Statistics:
             function: 'Callable[[Iterable[object]], Union[int, float]]',
             values: 'Iterable[object]',
         ) -> 'Union[int, float]':
+            
+            def extract_scalar(item):
+                if isinstance(item, (int, float)):
+                    return item
+                elif isinstance(item, (list, tuple)) and item:
+                    return item[0]
+                return None
+            
             try:
-                return function(values)
+                scalars = [
+                    extract_scalar(item)
+                    for item in values
+                ]
+
+                if all(
+                    scalar is None or (isinstance(scalar, float) and isnan(scalar))
+                    for scalar in scalars
+                ):
+                    # print("UserWarning: All values are NaN or invalid. Cannot compute statistic.")
+                    return np.nan
+                fitness = function(values)
+                return fitness
             except Exception:
                 return -1
 
